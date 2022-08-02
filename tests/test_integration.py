@@ -21,4 +21,4 @@ def test_request_intervention(client, settings):
     response = client.get('/test_app/url', HTTP_USER_AGENT='nikto')
 
     assert response.status_code == 403
-    assert not response.content == b'Path: url'
+    assert response.content != b'Path: url'

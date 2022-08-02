@@ -6,4 +6,4 @@ def simple_test(request):
 
 
 def test_app(request, path='/'):
-    return HttpResponse('Path: %s' % path)
+    return HttpResponse(f'Path: {path}')

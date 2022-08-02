@@ -63,8 +63,8 @@ class PyModSecurityMiddleware(object):
             for rule_file in glob.glob(pattern, recursive=True):
                 rules_count = self.rules.loadFromUri(rule_file)
                 if rules_count < 0:
-                    msg = '[ModSecurity] Error trying to load rule file %s. %s' % (
-                        rule_file, self.rules.getParserError())
+                    msg = f'[ModSecurity] Error trying to load rule file {rule_file}. {self.rules.getParserError()}'
+
                     self.logger.warning(msg)
                 else:
                     self._rules_count += rules_count
@@ -78,7 +78,7 @@ class PyModSecurityMiddleware(object):
         :rtype: int
         :return the total rules that were loaded
         '''
-        if rules is None or not len(rules) > 0:
+        if rules is None or len(rules) <= 0:
             return 0
 
         rules_count = self.rules.load(rules)
@@ -135,10 +135,7 @@ class PyModSecurityMiddleware(object):
         transaction.appendRequestBody(request.body)
         transaction.processRequestBody()
         response = self.process_intervention(transaction)
-        if response is not None:
-            return response
-
-        return None
+        return response if response is not None else None
 
     def _iter_headers(self, request):
         for key, value in request.META.items():
@@ -164,11 +161,7 @@ class PyModSecurityMiddleware(object):
         transaction.processResponseBody()
 
         response = self.process_intervention(transaction)
-        if response is not None:
-            return response
-
-        # No intervention so far, assume the response is safe
-        return original_response
+        return response if response is not None else original_response
 
     def process_intervention(self, transaction):
         '''
@@ -181,18 +174,16 @@ class PyModSecurityMiddleware(object):
         if intervention is None:
             return None
 
-        if transaction.intervention(intervention):
-            if intervention.log is not None:
-                self.logger.info(intervention.log)
-
-            if not intervention.disruptive:
-                return None
-
-            if intervention.url is not None:
-                response = HttpResponseRedirect(intervention.url)
-            else:
-                response = HttpResponse(status=intervention.status)
-
-            return response
-        else:
+        if not transaction.intervention(intervention):
             return None
+        if intervention.log is not None:
+            self.logger.info(intervention.log)
+
+        if not intervention.disruptive:
+            return None
+
+        return (
+            HttpResponseRedirect(intervention.url)
+            if intervention.url is not None
+            else HttpResponse(status=intervention.status)
+        )

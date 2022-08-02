@@ -98,8 +98,7 @@ def test_log(get_response, request_factory, mocker):
 
     get_response.mock_response = HttpResponse('Original response')
 
-    rule = 'SecRuleEngine On\n'
-    rule += 'SecRequestBodyAccess On\n'
+    rule = 'SecRuleEngine On\n' + 'SecRequestBodyAccess On\n'
     rule += 'SecRule REQUEST_BODY "@contains attack" "id:43,phase:2,allow,msg:\'log test ok\'"'
 
     mocker.spy(PyModSecurityMiddleware, 'modsecurity_log_callback')

@@ -16,7 +16,7 @@ def test_intervention_request_processConnection(middleware, get_response,
 
     response = middleware(request)
 
-    assert not response == get_response.mock_response
+    assert response != get_response.mock_response
     assert response.status_code == 403
 
 
@@ -35,7 +35,7 @@ def test_intervention_request_redirect(middleware, get_response,
 
     response = middleware(request)
 
-    assert not response == get_response.mock_response
+    assert response != get_response.mock_response
     assert response.status_code == 302
     assert response.url == 'http://www.example.com/failed.html'
 
@@ -45,15 +45,17 @@ def test_intervention_request_uri(middleware, get_response, request_factory):
 
     get_response.mock_response = 'Original response'
 
-    rule = 'SecRuleEngine On\n'
-    rule += 'SecRule REQUEST_URI "@streq /attack.php" "id:1,phase:1,t:lowercase,deny"'
+    rule = (
+        'SecRuleEngine On\n'
+        + 'SecRule REQUEST_URI "@streq /attack.php" "id:1,phase:1,t:lowercase,deny"'
+    )
 
     assert middleware.rules.load(rule) > 0, \
         middleware.rules.getParserError() or 'Failed to load rule'
 
     response = middleware(request)
 
-    assert not response == get_response.mock_response
+    assert response != get_response.mock_response
     assert response.status_code == 403
 
 
@@ -63,15 +65,17 @@ def test_intervention_request_headers(middleware, get_response,
 
     get_response.mock_response = 'Original response'
 
-    rule = 'SecRuleEngine On\n'
-    rule += 'SecRule REQUEST_HEADERS:USER_AGENT "nikto" "log,deny,id:107,msg:\'Nikto Scanners Identified\'"'
+    rule = (
+        'SecRuleEngine On\n'
+        + 'SecRule REQUEST_HEADERS:USER_AGENT "nikto" "log,deny,id:107,msg:\'Nikto Scanners Identified\'"'
+    )
 
     assert middleware.rules.load(rule) > 0, \
         middleware.rules.getParserError() or 'Failed to load rule'
 
     response = middleware(request)
 
-    assert not response == get_response.mock_response
+    assert response != get_response.mock_response
     assert response.status_code == 403
 
 
@@ -85,8 +89,7 @@ def test_intervention_request_body(middleware, get_response, request_factory):
 
     get_response.mock_response = 'Original response'
 
-    rule = 'SecRuleEngine On\n'
-    rule += 'SecRequestBodyAccess On\n'
+    rule = 'SecRuleEngine On\n' + 'SecRequestBodyAccess On\n'
     rule += 'SecRule REQUEST_BODY "@contains attack" "id:43,phase:2,deny"'
 
     assert middleware.rules.load(rule) > 0, \
@@ -94,5 +97,5 @@ def test_intervention_request_body(middleware, get_response, request_factory):
 
     response = middleware(request)
 
-    assert not response == get_response.mock_response
+    assert response != get_response.mock_response
     assert response.status_code == 403

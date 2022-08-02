@@ -25,10 +25,7 @@ def format(ctx, noimports=False, nostyle=False):
 @task
 def test(ctx, n='auto', m='1', debug=False, nocapture=False):
     import pytest
-    args = [
-        '-n=%s' % n,
-        '-m=%s' % m,
-    ]
+    args = [f'-n={n}', f'-m={m}']
 
     if debug:
         args.append('-vv')
